@@ -1,28 +1,29 @@
 #include <napi.h>
-#include <string>
-
-std::string encryptData(const std::string& data) {
-  std::string result {"Encrypted Data"};
-  return result;
-}
+#include <algorithm>
+#include <cctype>
 
 //Callback function that will run
 Napi::Array processData(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::Array input = info[0].As<Napi::Array>();
-  
+  std::string method = info[1].As<Napi::String>().Utf8Value(); 
   uint32_t inputLength = input.Length();
   Napi::Array output = Napi::Array::New(env, inputLength);
 
-  std::string encryptedData {};
   for(uint32_t i = 0; i < inputLength; i++) {
     Napi::Object record = input.Get(i).As<Napi::Object>();
-    std::string confidentialData = record.Get("PAN").As<Napi::String>().Utf8Value();
-    encryptedData = encryptData(confidentialData);
-    Napi::Object encryptedRecord = Napi::Object::New(env);
-    encryptedRecord.Set("Id", record.Get("id"));
-    encryptedRecord.Set("Encrypted PAN", Napi::String::New(env, encryptedData));
-    output.Set(i, encryptedRecord);
+    Napi::Object transformedRecord = Napi::Object::New(env);
+    transformedRecord.Set("Id", record.Get("Id"));
+    std::string name {record.Get("Name").As<Napi::String>().Utf8Value()};
+    if(method == "toUpperCase") {
+      
+      std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) {return std::toupper(c);});
+    } else if(method == "toLowerCase") {
+
+      std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) {return std::tolower(c);});
+    }
+    transformedRecord.Set("Name", Napi::String::New(env, name));
+    output.Set(i, transformedRecord);
   }
 
   return output;
