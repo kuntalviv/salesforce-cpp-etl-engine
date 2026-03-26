@@ -1,6 +1,7 @@
 #include <napi.h>
 #include <algorithm>
 #include <cctype>
+#include "fuzzy_match.h"
 
 //Callback function that will run
 Napi::Array processData(const Napi::CallbackInfo& info) {
@@ -15,12 +16,14 @@ Napi::Array processData(const Napi::CallbackInfo& info) {
     Napi::Object transformedRecord = Napi::Object::New(env);
     transformedRecord.Set("Id", record.Get("Id"));
     std::string name {record.Get("Name").As<Napi::String>().Utf8Value()};
+    
     if(method == "toUpperCase") {
-      
       std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) {return std::toupper(c);});
     } else if(method == "toLowerCase") {
 
       std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) {return std::tolower(c);});
+    } else if(method == "fuzzyMatch") {
+      
     }
     transformedRecord.Set("Name", Napi::String::New(env, name));
     output.Set(i, transformedRecord);
